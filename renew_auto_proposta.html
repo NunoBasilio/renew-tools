@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>renew.pt — Auto Proposta</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --coral: #E8593C;
+  --coral-dark: #C4431F;
+  --dark: #111110;
+  --ink: #1e1e1c;
+  --muted: #777770;
+  --border: #e8e8e3;
+  --surface: #f7f7f4;
+  --white: #ffffff;
+  --green: #2d8c5a;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+body { font-family: var(--font); background: var(--surface); color: var(--ink); min-height: 100vh; }
+
+header {
+  background: var(--dark);
+  padding: 0 40px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo { display: flex; align-items: baseline; gap: 2px; }
+.logo-re { font-size: 20px; font-weight: 600; color: var(--white); letter-spacing: -1px; }
+.logo-new { font-size: 20px; font-weight: 600; color: var(--coral); letter-spacing: -1px; }
+.logo-dot { width: 5px; height: 5px; background: var(--coral); border-radius: 50%; margin: 0 2px 2px; }
+header p { font-size: 12px; color: #666; font-family: var(--mono); }
+
+.container { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+.step {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.step:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  width: 28px; height: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  flex-shrink: 0;
+}
+.step-num.active { background: var(--coral); border-color: var(--coral); color: var(--white); }
+.step-num.done { background: var(--green); border-color: var(--green); color: var(--white); }
+.step-title { font-size: 14px; font-weight: 600; }
+.step-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.step-body { padding: 24px; }
+
+/* Drop zone */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--coral); background: #fff8f6; }
+.dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.dz-icon { width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.3; }
+.dz-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.dz-sub { font-size: 12px; color: var(--muted); }
+.dz-file { display: none; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border-radius: 10px; }
+.dz-file.show { display: flex; }
+.dz-file-icon { width: 36px; height: 36px; background: #fef0ec; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dz-file-name { font-size: 13px; font-weight: 500; }
+.dz-file-size { font-size: 11px; color: var(--muted); }
+.dz-remove { margin-left: auto; font-size: 11px; color: var(--muted); cursor: pointer; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); }
+.dz-remove:hover { color: var(--coral); border-color: var(--coral); }
+
+/* Progress */
+.progress-wrap { margin: 16px 0; }
+.progress-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-family: var(--mono); }
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--coral); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+.progress-steps { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.prog-step { font-size: 11px; font-family: var(--mono); padding: 3px 10px; border-radius: 20px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); transition: all 0.3s; }
+.prog-step.active { background: #fff3f0; color: var(--coral); border-color: var(--coral); }
+.prog-step.done { background: #f0f9f4; color: var(--green); border-color: var(--green); }
+
+/* Extracted data */
+.extracted-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.ext-field { padding: 10px 14px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); }
+.ext-label { font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.ext-value { font-size: 13px; font-weight: 500; color: var(--ink); }
+.ext-value.empty { color: #ccc; font-style: italic; font-weight: 400; }
+
+/* Especialidades */
+.esp-list { display: flex; flex-direction: column; gap: 6px; }
+.esp-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.esp-item.included { border-color: #b8e4cc; background: #f0fbf5; }
+.esp-item.excluded { opacity: 0.45; }
+.esp-check { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+.esp-name { flex: 1; font-size: 13px; font-weight: 500; }
+.esp-name-en { font-size: 11px; color: var(--muted); font-weight: 400; }
+.esp-val { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--ink); }
+.esp-val input { width: 110px; text-align: right; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--mono); font-size: 13px; background: var(--white); }
+.esp-val input:focus { outline: none; border-color: var(--coral); }
+.conf-badge { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+.conf-high { background: #f0fbf5; color: var(--green); border: 1px solid #b8e4cc; }
+.conf-med { background: #fffbf0; color: #b87a00; border: 1px solid #f0d890; }
+.conf-low { background: #fff0f0; color: #c44; border: 1px solid #f0c0c0; }
+
+/* Totais */
+.totals-card { background: var(--dark); color: var(--white); border-radius: 12px; padding: 20px; }
+.total-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #999; }
+.total-row.main { font-size: 16px; font-weight: 600; color: var(--white); border-top: 1px solid #333; padding-top: 12px; margin-top: 6px; }
+.total-row.main span:last-child { color: var(--coral); }
+.discount-row { display: flex; gap: 12px; margin-bottom: 16px; }
+.discount-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 13px; }
+
+/* Buttons */
+.btn { padding: 11px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; font-family: var(--font); }
+.btn-primary { background: var(--coral); color: var(--white); }
+.btn-primary:hover { background: var(--coral-dark); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--white); color: var(--ink); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: #999; }
+.btn-success { background: var(--green); color: var(--white); }
+.btn-success:hover { background: #216644; }
+
+.actions-bar { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* Alerts */
+.alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; }
+.alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.alert-warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+.hidden { display: none !important; }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+.tag { display: inline-block; font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 20px; background: #fff3f0; color: var(--coral); border: 1px solid #fdd; margin-left: 6px; }
+
+@media (max-width: 600px) {
+  .extracted-grid { grid-template-columns: 1fr; }
+  .container { padding: 20px 16px 80px; }
+  header { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-re">RE</span><span class="logo-new">NEW</span>
+    <div class="logo-dot"></div>
+  </div>
+  <p>auto proposta · ai-powered proposal generator</p>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1: Upload -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num active" id="n1">1</div>
+      <div>
+        <div class="step-title">Submeter documento · Submit document</div>
+        <div class="step-sub">PDF de memória descritiva, projeto de arquitetura ou briefing · Architecture brief, design memo or scope document</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" onchange="handleFile(this.files[0])">
+        <svg class="dz-icon" viewBox="0 0 40 40" fill="none">
+          <rect x="6" y="4" width="22" height="28" rx="3" stroke="#999" stroke-width="1.5"/>
+          <path d="M28 4l6 6v22a3 3 0 01-3 3H9" stroke="#999" stroke-width="1.5"/>
+          <path d="M28 4v6h6" stroke="#999" stroke-width="1.5"/>
+          <path d="M13 20h14M13 24h10" stroke="#E8593C" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div class="dz-title">Arrastar PDF aqui · Drag PDF here</div>
+        <div class="dz-sub">ou clique para selecionar · or click to select &nbsp;·&nbsp; PDF, DOCX, TXT</div>
+      </div>
+      <div class="dz-file" id="dz-file">
+        <div class="dz-file-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="2" y="1" width="10" height="14" rx="2" fill="#fdd" stroke="#E8593C" stroke-width="1"/>
+            <path d="M12 1l4 4" stroke="#E8593C" stroke-width="1"/>
+            <path d="M5 7h8M5 10h6" stroke="#E8593C" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="dz-file-name" id="dz-name">—</div>
+          <div class="dz-file-size" id="dz-size">—</div>
+        </div>
+        <button class="dz-remove" onclick="removeFile()">Remover</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="alert alert-info">
+        A IA irá extrair automaticamente: cliente, morada, área, nº de edifícios, especialidades necessárias e tipologia da obra.<br>
+        <span style="opacity:0.7">AI will automatically extract: client, address, area, number of buildings, required specialities and project type.</span>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-primary" id="btn-analisar" onclick="analisarDocumento()" disabled>
+          Analisar com IA · Analyse with AI →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Análise IA -->
+  <div class="step hidden" id="s2">
+    <div class="step-header">
+      <div class="step-num" id="n2">2</div>
+      <div>
+        <div class="step-title">Análise IA · AI Analysis</div>
+        <div class="step-sub">Extração automática de dados e cálculo de honorários · Automatic data extraction and fee calculation</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="progress-wrap" id="progress-area">
+        <div class="progress-label" id="prog-label">A iniciar...</div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+        <div class="progress-steps">
+          <div class="prog-step" id="ps-read">Leitura do documento</div>
+          <div class="prog-step" id="ps-extract">Extração de dados</div>
+          <div class="prog-step" id="ps-notion">Consulta histórico Notion</div>
+          <div class="prog-step" id="ps-calc">Cálculo de honorários</div>
+          <div class="prog-step" id="ps-gen">Geração da proposta</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Revisão -->
+  <div class="step hidden" id="s3">
+    <div class="step-header">
+      <div class="step-num" id="n3">3</div>
+      <div>
+        <div class="step-title">Revisão e ajuste · Review & adjust</div>
+        <div class="step-sub">Confirma os dados extraídos e ajusta os valores se necessário · Confirm extracted data and adjust fees if needed</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="alert alert-success hidden" id="ia-summary"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;font-family:var(--mono)">Dados extraídos · Extracted data</div>
+
+      <div class="extracted-grid" id="extracted-grid"></div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;font-family:var(--mono)">
+        Especialidades identificadas · Identified specialities
+        <span class="tag" id="esp-count">0 identificadas</span>
+      </div>
+
+      <div class="esp-list" id="esp-list"></div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;font-family:var(--mono)">Resumo financeiro · Financial summary</div>
+
+      <div class="discount-row">
+        <div style="flex:1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Desconto comercial · Discount (€)</label>
+          <input type="number" id="desconto" value="0" min="0" placeholder="0" oninput="recalcular()"></div>
+        <div style="flex:1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">IVA · VAT (%)</label>
+          <input type="number" id="iva-pct" value="23" min="0" max="100" oninput="recalcular()"></div>
+        <div style="flex:1"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Referência proposta · Ref.</label>
+          <input type="text" id="ref-prop" value="PH.___.___.R00"></div>
+      </div>
+
+      <div class="totals-card" id="totals-card">
+        <div class="total-row"><span>Subtotal</span><span id="t-sub">0,00 €</span></div>
+        <div class="total-row"><span>Desconto · Discount</span><span id="t-desc">− 0,00 €</span></div>
+        <div class="total-row"><span>Total s/ IVA · ex. VAT</span><span id="t-siva">0,00 €</span></div>
+        <div class="total-row"><span>IVA 23%</span><span id="t-iva">0,00 €</span></div>
+        <div class="total-row main"><span>Total c/ IVA · inc. VAT</span><span id="t-civa">0,00 €</span></div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="resetar()">Novo documento · New doc</button>
+        <button class="btn btn-success" id="btn-pdf" onclick="gerarPDF()">Gerar PDF · Generate PDF ↓</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const NOTION_TOKEN = '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';
+const NOTION_DB = '1354c6a13ef148b89244e56cc5e9e344';
+const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+
+let currentFile = null;
+let extractedData = null;
+let notionHistorico = [];
+let especialidadesState = [];
+
+const ESP_CATALOGUE = [
+  { id:'est-lsf',   pt:'Estabilidade — LSF',                        en:'Structural Engineering — LSF' },
+  { id:'est-trad',  pt:'Estabilidade — Tradicional',                 en:'Structural Engineering — Traditional' },
+  { id:'contencao', pt:'Contenção',                                  en:'Retaining Structures' },
+  { id:'agua',      pt:'Redes Prediais — Abastecimento de Água',      en:'Plumbing — Water Supply' },
+  { id:'residuais', pt:'Redes Prediais — Águas Residuais',            en:'Plumbing — Sewage Drainage' },
+  { id:'pluviais',  pt:'Redes Prediais — Águas Pluviais',             en:'Plumbing — Storm Water' },
+  { id:'avac',      pt:'AVAC / Ventilação',                           en:'HVAC / Ventilation' },
+  { id:'termico',   pt:'Comportamento Térmico (RECS/REH)',            en:'Thermal Performance' },
+  { id:'acustica',  pt:'Verificação Requisitos Acústicos',            en:'Acoustic Assessment' },
+  { id:'eletric',   pt:'Eletricidade',                               en:'Electrical Engineering' },
+  { id:'ited',      pt:'ITED / Telecomunicações',                     en:'ITED / Telecommunications' },
+  { id:'gas',       pt:'Instalação de Gás / Isenção',                 en:'Gas / Exemption' },
+  { id:'scie',      pt:'Segurança Contra Incêndio (SCIE)',            en:'Fire Safety (SCIE)' },
+  { id:'pss',       pt:'Plano de Segurança e Saúde',                  en:'Health & Safety Plan' },
+  { id:'pgr',       pt:'Plano de Gestão de Resíduos',                 en:'Waste Management Plan' },
+  { id:'coord',     pt:'Coordenação Geral das Especialidades',        en:'General Coordination' },
+];
+
+function fmt(v) {
+  return new Intl.NumberFormat('pt-PT', {style:'currency', currency:'EUR', minimumFractionDigits:2}).format(v);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  currentFile = file;
+  document.getElementById('dropzone').style.display = 'none';
+  const fi = document.getElementById('dz-file');
+  fi.classList.add('show');
+  document.getElementById('dz-name').textContent = file.name;
+  document.getElementById('dz-size').textContent = (file.size/1024).toFixed(0) + ' KB · ' + file.type;
+  document.getElementById('btn-analisar').disabled = false;
+}
+
+function removeFile() {
+  currentFile = null;
+  document.getElementById('dropzone').style.display = 'block';
+  document.getElementById('dz-file').classList.remove('show');
+  document.getElementById('file-input').value = '';
+  document.getElementById('btn-analisar').disabled = true;
+}
+
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+
+function setProgress(pct, label, step) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+  ['ps-read','ps-extract','ps-notion','ps-calc','ps-gen'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.className = 'prog-step' + (i < step ? ' done' : i === step ? ' active' : '');
+  });
+}
+
+function setStepState(n, state) {
+  const el = document.getElementById('n'+n);
+  el.className = 'step-num ' + state;
+  if (state === 'done') el.innerHTML = '✓';
+  else el.textContent = n;
+}
+
+async function carregarNotion() {
+  try {
+    const r = await fetch(`https://api.notion.com/v1/databases/${NOTION_DB}/query`, {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+NOTION_TOKEN,'Notion-Version':'2022-06-28','Content-Type':'application/json'},
+      body: JSON.stringify({page_size:100})
+    });
+    const data = await r.json();
+    if (data.object === 'error') return [];
+    return data.results.map(p => {
+      const pr = p.properties;
+      return {
+        esp: pr['Especialidade']?.select?.name || '',
+        tipo: pr['Tipo de obra']?.select?.name || '',
+        complexidade: pr['Complexidade']?.select?.name || '',
+        area: pr['Área bruta (m²)']?.number || 0,
+        valor: pr['Valor honorário (€)']?.number || 0,
+      };
+    }).filter(r => r.valor > 0 && r.area > 0);
+  } catch { return []; }
+}
+
+function calcularValorHistorico(espNome, area, tipoObra, complexidade) {
+  const mappings = {
+    'Estabilidade — LSF': ['Estabilidade LSF'],
+    'Estabilidade — Tradicional': ['Estabilidade Tradicional'],
+    'Redes Prediais — Abastecimento de Água': ['Redes de Água'],
+    'Redes Prediais — Águas Residuais': ['Águas Residuais'],
+    'Redes Prediais — Águas Pluviais': ['Águas Pluviais'],
+    'AVAC / Ventilação': ['AVAC'],
+    'Comportamento Térmico (RECS/REH)': ['Comportamento Térmico'],
+    'Verificação Requisitos Acústicos': ['Acústica'],
+    'Eletricidade': ['Eletricidade'],
+    'ITED / Telecomunicações': ['ITED'],
+    'Instalação de Gás / Isenção': ['Gás'],
+    'Segurança Contra Incêndio (SCIE)': ['SCIE'],
+    'Coordenação Geral das Especialidades': ['Coordenação'],
+  };
+  const notionNames = mappings[espNome] || [espNome];
+  let refs = notionHistorico.filter(r => notionNames.includes(r.esp));
+  if (refs.length === 0) return { valor: 0, confianca: 'low' };
+
+  const compMult = { 'Simples':0.7, 'Média':0.85, 'Elevada':1.0, 'Muito elevada':1.25 };
+  const pm2s = refs.map(r => r.valor / r.area);
+  const medPm2 = pm2s.reduce((a,b)=>a+b,0) / pm2s.length;
+  const mComp = compMult[complexidade] || 1.0;
+  const base = area > 0 ? medPm2 * area : refs.reduce((a,b)=>a+b.valor,0)/refs.length;
+  const valor = Math.round(base * mComp / 50) * 50;
+  const confianca = refs.length >= 3 ? 'high' : refs.length >= 1 ? 'med' : 'low';
+  return { valor, confianca };
+}
+
+async function analisarDocumento() {
+  if (!currentFile) return;
+
+  document.getElementById('s2').classList.remove('hidden');
+  setStepState(1, 'done');
+  setStepState(2, 'active');
+  document.getElementById('btn-analisar').disabled = true;
+
+  setProgress(10, 'A ler o documento...', 0);
+
+  const base64 = await new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.readAsDataURL(currentFile);
+  });
+
+  setProgress(25, 'A extrair dados com IA...', 1);
+
+  const systemPrompt = `És um assistente especializado em engenharia de especialidades em Portugal.
+Analisa documentos de projeto e extrai dados estruturados em JSON.
+Responde APENAS com JSON válido, sem texto adicional, sem marcadores de código.
+
+O JSON deve ter exactamente esta estrutura:
+{
+  "cliente": "nome do cliente ou empresa",
+  "nif": "NIF se disponível",
+  "morada": "morada completa da obra",
+  "empreendimento": "nome/designação do projeto",
+  "processo": "referência do processo camarário se disponível",
+  "camara": "câmara municipal",
+  "area_total": número em m2,
+  "n_edificios": número,
+  "tipo_obra": "Habitação unifamiliar | Habitação multifamiliar | Turismo / Agroturismo | Comércio / Serviços | Industrial / Armazém | Reabilitação | Outro",
+  "complexidade": "Simples | Média | Elevada | Muito elevada",
+  "especialidades": ["lista dos IDs das especialidades necessárias: est-lsf, est-trad, contencao, agua, residuais, pluviais, avac, termico, acustica, eletric, ited, gas, scie, pss, pgr, coord"],
+  "notas_ia": "resumo em 1-2 frases do que foi identificado"
+}`;
+
+  try {
+    const msgContent = currentFile.type === 'application/pdf'
+      ? [
+          { type:'document', source:{ type:'base64', media_type:'application/pdf', data:base64 } },
+          { type:'text', text:'Analisa este documento e extrai os dados do projeto conforme instrução.' }
+        ]
+      : [{ type:'text', text:'Documento: ' + atob(base64).substring(0,8000) + '\n\nExtrai os dados conforme instrução.' }];
+
+    const resp = await fetch(CLAUDE_API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[{ role:'user', content: msgContent }]
+      })
+    });
+    const aiData = await resp.json();
+    const txt = aiData.content?.filter(c=>c.type==='text').map(c=>c.text).join('') || '{}';
+
+    setProgress(55, 'A consultar histórico Notion...', 2);
+    notionHistorico = await carregarNotion();
+
+    setProgress(75, 'A calcular honorários com base no histórico...', 3);
+
+    let parsed;
+    try { parsed = JSON.parse(txt.trim()); }
+    catch { parsed = {}; }
+
+    extractedData = parsed;
+
+    especialidadesState = ESP_CATALOGUE.map(e => {
+      const included = (parsed.especialidades || []).includes(e.id);
+      const { valor, confianca } = calcularValorHistorico(e.pt, parsed.area_total || 500, parsed.tipo_obra, parsed.complexidade || 'Elevada');
+      return { ...e, included, valor: included ? valor : 0, confianca };
+    });
+
+    setProgress(95, 'A preparar revisão...', 4);
+    await new Promise(r => setTimeout(r, 400));
+    setProgress(100, 'Análise concluída!', 5);
+
+    setStepState(2, 'done');
+    setStepState(3, 'active');
+    document.getElementById('s3').classList.remove('hidden');
+    renderExtracted(parsed);
+    renderEspecialidades();
+    recalcular();
+
+    document.getElementById('s3').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  } catch(e) {
+    setProgress(0, 'Erro: ' + e.message, 0);
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-error';
+    alert.textContent = 'Erro na análise: ' + e.message + '. Verifica a ligação e tenta novamente.';
+    document.getElementById('s2').querySelector('.step-body').appendChild(alert);
+  }
+}
+
+function renderExtracted(d) {
+  const fields = [
+    ['Cliente · Client', d.cliente],
+    ['NIF', d.nif],
+    ['Morada da Obra · Site', d.morada],
+    ['Empreendimento · Project', d.empreendimento],
+    ['Câmara · Municipality', d.camara],
+    ['Processo · Planning Ref.', d.processo],
+    ['Área bruta · Gross area', d.area_total ? d.area_total + ' m²' : null],
+    ['Nº edifícios · Buildings', d.n_edificios],
+    ['Tipo de obra · Type', d.tipo_obra],
+    ['Complexidade · Complexity', d.complexidade],
+  ];
+  const grid = document.getElementById('extracted-grid');
+  grid.innerHTML = fields.map(([l,v]) => `
+    <div class="ext-field">
+      <div class="ext-label">${l}</div>
+      <div class="ext-value ${v?'':'empty'}">${v || 'Não identificado · Not found'}</div>
+    </div>
+  `).join('');
+
+  if (d.notas_ia) {
+    const s = document.getElementById('ia-summary');
+    s.textContent = '✦ ' + d.notas_ia;
+    s.classList.remove('hidden');
+  }
+}
+
+function renderEspecialidades() {
+  const list = document.getElementById('esp-list');
+  const included = especialidadesState.filter(e=>e.included).length;
+  document.getElementById('esp-count').textContent = included + ' identificadas';
+
+  list.innerHTML = especialidadesState.map((e, i) => {
+    const confClass = e.confianca === 'high' ? 'conf-high' : e.confianca === 'med' ? 'conf-med' : 'conf-low';
+    const confLabel = e.confianca === 'high' ? 'histórico' : e.confianca === 'med' ? 'estimado' : 'sem dados';
+    return `
+    <div class="esp-item ${e.included?'included':'excluded'}" id="esp-item-${i}">
+      <input type="checkbox" class="esp-check" ${e.included?'checked':''} onchange="toggleEsp(${i}, this.checked)">
+      <div style="flex:1">
+        <div class="esp-name">${e.pt}</div>
+        <div class="esp-name-en">${e.en}</div>
+      </div>
+      ${e.included ? `<span class="conf-badge ${confClass}">${confLabel}</span>` : ''}
+      <div class="esp-val">
+        <input type="number" value="${e.valor}" min="0" step="50" ${!e.included?'disabled':''} onchange="setEspValor(${i}, this.value)" style="opacity:${e.included?1:0.3}">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEsp(i, checked) {
+  especialidadesState[i].included = checked;
+  if (checked && especialidadesState[i].valor === 0) {
+    const { valor } = calcularValorHistorico(
+      especialidadesState[i].pt,
+      extractedData?.area_total || 500,
+      extractedData?.tipo_obra,
+      extractedData?.complexidade || 'Elevada'
+    );
+    especialidadesState[i].valor = valor;
+  }
+  renderEspecialidades();
+  recalcular();
+}
+
+function setEspValor(i, v) {
+  especialidadesState[i].valor = parseFloat(v) || 0;
+  recalcular();
+}
+
+function recalcular() {
+  const sub = especialidadesState.filter(e=>e.included).reduce((a,e)=>a+e.valor, 0);
+  const desc = parseFloat(document.getElementById('desconto').value) || 0;
+  const ivaPct = parseFloat(document.getElementById('iva-pct').value) || 23;
+  const siva = sub - desc;
+  const iva = siva * ivaPct / 100;
+  const civa = siva + iva;
+  document.getElementById('t-sub').textContent = fmt(sub);
+  document.getElementById('t-desc').textContent = '− ' + fmt(desc);
+  document.getElementById('t-siva').textContent = fmt(siva);
+  document.getElementById('t-iva').textContent = fmt(iva);
+  document.getElementById('t-civa').textContent = fmt(civa);
+}
+
+function resetar() {
+  location.reload();
+}
+
+function gerarPDF() {
+  const d = extractedData || {};
+  const ref = document.getElementById('ref-prop').value;
+  const desc = parseFloat(document.getElementById('desconto').value) || 0;
+  const ivaPct = parseFloat(document.getElementById('iva-pct').value) || 23;
+  const sub = especialidadesState.filter(e=>e.included).reduce((a,e)=>a+e.valor, 0);
+  const siva = sub - desc;
+  const iva = siva * ivaPct / 100;
+  const civa = siva + iva;
+  const espsAtivas = especialidadesState.filter(e=>e.included);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W=210, ML=18, MR=18, CW=W-ML-MR;
+  let y=0;
+  const coral=[232,89,60], dark=[26,26,24], gray=[120,120,115], lg=[240,240,235], white=[255,255,255], green=[45,140,90];
+
+  function addPage() {
+    doc.addPage(); y=20;
+    doc.setFontSize(8); doc.setTextColor(...gray);
+    doc.text('renew.pt · Engenharia de Especialidades', ML, 287);
+    doc.text(ref, W-MR, 287, {align:'right'});
+    doc.setDrawColor(...lg); doc.setLineWidth(0.3); doc.line(ML,284,W-MR,284);
+  }
+  function check(h) { if(y+h>272) addPage(); }
+  function sec(pt, en) {
+    check(14);
+    doc.setFillColor(...coral); doc.rect(ML,y,2,8,'F');
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+    doc.text(pt, ML+5, y+5.5);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
+    doc.text('· '+en, ML+5+doc.getTextWidth(pt)+1, y+5.5);
+    y+=12;
+  }
+
+  doc.setFillColor(...dark); doc.rect(0,0,W,60,'F');
+  doc.setFillColor(...coral); doc.rect(0,55,W,4,'F');
+  doc.setFont('helvetica','bold'); doc.setTextColor(...white); doc.setFontSize(28);
+  doc.text('RE', ML, 28); doc.text('NEW', ML, 44);
+  doc.setFillColor(...coral); doc.rect(ML,46,28,1.5,'F');
+  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(200,200,195);
+  doc.text('PROPOSTA DE HONORÁRIOS · PROPOSAL OF FEES', W-MR, 28, {align:'right'});
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(...white);
+  const emp = (d.empreendimento||'Empreendimento').toUpperCase();
+  doc.text(doc.splitTextToSize(emp, CW*0.55), W-MR, 38, {align:'right'});
+  y=75;
+
+  sec('1. Identificação','Identification');
+  doc.setFillColor(...lg); doc.rect(ML,y,CW,26,'F');
+  doc.setFontSize(7.5); doc.setTextColor(...gray); doc.setFont('helvetica','normal');
+  doc.text('Referência · Reference', ML+4, y+5);
+  doc.text('Data · Date', ML+60, y+5);
+  doc.text('Processo · Planning Ref.', ML+105, y+5);
+  doc.setFontSize(9.5); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text(ref, ML+4, y+14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(new Date().toLocaleDateString('pt-PT'), ML+60, y+14);
+  doc.text(d.processo||'—', ML+105, y+14);
+  y+=32;
+
+  sec('2. Cliente','Client');
+  [[d.cliente||'—','NIF: '+(d.nif||'—')],[d.morada||'—', 'Câmara: '+(d.camara||'—')],[d.empreendimento||'—', d.tipo_obra||'—']].forEach(([a,b])=>{
+    check(12);
+    doc.setFontSize(9); doc.setTextColor(...dark); doc.setFont('helvetica','normal');
+    doc.text(a||'—', ML, y);
+    doc.setFontSize(8); doc.setTextColor(...gray);
+    doc.text(b||'', ML+CW/2+4, y);
+    y+=11;
+  });
+  y+=4;
+
+  sec('3. Âmbito','Scope');
+  check(12);
+  doc.setFontSize(8.5); doc.setTextColor(...dark);
+  const aInfo = `Área total: ${d.area_total||'—'} m²  ·  Edifícios: ${d.n_edificios||'—'}  ·  Complexidade: ${d.complexidade||'—'}`;
+  doc.text(aInfo, ML, y); y+=10;
+
+  sec('4. Especialidades','Specialities');
+  doc.autoTable({
+    startY: y,
+    head: [['#','Especialidade · Speciality',{content:'Valor s/IVA · ex. VAT',styles:{halign:'right'}}]],
+    body: espsAtivas.map((e,i)=>[
+      {content:(i+1)+'.',styles:{halign:'center',textColor:gray,fontSize:8}},
+      {content:e.pt+'\n'+e.en, styles:{fontSize:8.5,textColor:dark}},
+      {content:fmt(e.valor), styles:{halign:'right',fontSize:9,textColor:dark,fontStyle:'bold'}}
+    ]),
+    theme:'striped',
+    headStyles:{fillColor:dark,textColor:white,fontSize:8,fontStyle:'bold',cellPadding:4},
+    alternateRowStyles:{fillColor:[248,248,244]},
+    columnStyles:{0:{cellWidth:10},1:{cellWidth:130},2:{cellWidth:CW-140}},
+    margin:{left:ML,right:MR},
+    styles:{font:'helvetica',overflow:'linebreak',cellPadding:3.5},
+  });
+  y = doc.lastAutoTable.finalY+10;
+
+  check(55);
+  sec('5. Resumo Financeiro','Fee Summary');
+  doc.autoTable({
+    startY:y,
+    body:[
+      ['Subtotal especialidades',fmt(sub)],
+      ['Desconto · Discount','− '+fmt(desc)],
+      ['Total s/ IVA · ex. VAT',fmt(siva)],
+      [`IVA ${ivaPct}% · VAT`,fmt(iva)],
+    ],
+    foot:[[{content:'TOTAL C/ IVA · TOTAL INC. VAT',styles:{fontStyle:'bold',fontSize:10,textColor:white}},{content:fmt(civa),styles:{fontStyle:'bold',fontSize:10,halign:'right',textColor:white}}]],
+    theme:'plain',
+    footStyles:{fillColor:coral,cellPadding:5},
+    columnStyles:{0:{cellWidth:CW-45},1:{cellWidth:45,halign:'right'}},
+    margin:{left:ML,right:MR},
+    styles:{font:'helvetica',fontSize:9,cellPadding:3},
+  });
+  y=doc.lastAutoTable.finalY+10;
+
+  check(50);
+  sec('6. Condições de Pagamento','Payment Terms');
+  doc.autoTable({
+    startY:y,
+    head:[['Tranche','%','Condição · Condition']],
+    body:[
+      ['1.ª','40%','Com a adjudicação formal. · Upon formal award.'],
+      ['2.ª','30%','Com entrega de elementos preliminares. · Upon preliminary delivery.'],
+      ['3.ª','20%','Com entrega final. · Upon final delivery.'],
+      ['4.ª','10%','Com fecho do processo. · Upon process closure.'],
+    ],
+    headStyles:{fillColor:dark,textColor:white,fontSize:8,fontStyle:'bold',cellPadding:3.5},
+    theme:'striped',
+    alternateRowStyles:{fillColor:[248,248,244]},
+    columnStyles:{0:{cellWidth:16},1:{cellWidth:12},2:{cellWidth:CW-28}},
+    margin:{left:ML,right:MR},
+    styles:{font:'helvetica',fontSize:8,overflow:'linebreak',cellPadding:3},
+  });
+  y=doc.lastAutoTable.finalY+14;
+
+  check(55);
+  sec('7. Aceitação','Acceptance');
+  doc.setFillColor(...lg); doc.rect(ML,y,CW,52,'F');
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Pelo Gabinete · By the Office', ML+4, y+6);
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text('Nuno Basílio', ML+4, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Sócio-gerente · Managing Partner', ML+4, y+18);
+  doc.text('Data · Date: '+new Date().toLocaleDateString('pt-PT'), ML+4, y+24);
+  doc.setDrawColor(...gray); doc.setLineWidth(0.3); doc.line(ML+4,y+40,ML+4+70,y+40);
+  doc.setFontSize(7.5); doc.text('Assinatura · Signature', ML+4, y+44);
+  const x2=ML+CW/2+4;
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Pelo Cliente · By the Client', x2, y+6);
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text(d.cliente||'___________________________', x2, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Data · Date: ___/___/_____', x2, y+24);
+  doc.line(x2,y+40,x2+70,y+40);
+  doc.setFontSize(7.5); doc.text('Assinatura · Signature', x2, y+44);
+  doc.setFillColor(...coral); doc.rect(ML,y+48,CW,1,'F');
+
+  const total = doc.getNumberOfPages();
+  for(let i=1;i<=total;i++){
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(...gray);
+    doc.text('renew.pt · geral@renew.pt', ML, 287);
+    doc.text(`${ref}  |  ${i}/${total}`, W-MR, 287, {align:'right'});
+    doc.setDrawColor(...lg); doc.setLineWidth(0.3); doc.line(ML,284,W-MR,284);
+  }
+
+  const fn = `${ref}_${(d.cliente||'proposta').replace(/\s/g,'_').substring(0,20)}.pdf`;
+  doc.save(fn);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>renew.pt — Gerador de Propostas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; }
+  header { background: #fff; border-bottom: 1px solid #e5e5e0; padding: 16px 32px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: #E8593C; }
+  header p { font-size: 13px; color: #888; }
+  main { max-width: 900px; margin: 32px auto; padding: 0 24px 80px; }
+  .section { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .section-title { font-size: 14px; font-weight: 600; color: #1a1a18; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0eb; }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  label { font-size: 12px; color: #666; display: block; margin-bottom: 4px; }
+  input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a1a18; background: #fff; transition: border 0.15s; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #E8593C; }
+  textarea { resize: vertical; min-height: 72px; }
+  .esp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .esp-table th { text-align: left; font-size: 11px; color: #888; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #f0f0eb; }
+  .esp-table td { padding: 6px 8px; border-bottom: 1px solid #f9f9f7; vertical-align: middle; }
+  .esp-table input[type=number] { width: 120px; }
+  .esp-table input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: #E8593C; }
+  .esp-table tr.active { background: #fffaf9; }
+  .totals { background: #f9f9f7; border-radius: 8px; padding: 16px; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; color: #555; }
+  .total-row.main { font-size: 15px; font-weight: 600; color: #1a1a18; border-top: 1px solid #e5e5e0; padding-top: 10px; margin-top: 6px; }
+  .btn-primary { background: #E8593C; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-primary:hover { background: #d44a2e; }
+  .btn-secondary { background: #fff; color: #1a1a18; border: 1px solid #ddd; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { border-color: #999; }
+  .actions { display: flex; gap: 12px; justify-content: flex-end; position: sticky; bottom: 0; background: rgba(245,245,240,0.95); padding: 16px 0; backdrop-filter: blur(8px); }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; background: #f0f0eb; color: #666; }
+  .badge.active { background: #fef0ec; color: #E8593C; }
+  @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } header { padding: 12px 16px; } main { padding: 0 12px 80px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">RE<span>NEW</span></div>
+  </div>
+  <div>
+    <p>Gerador de Propostas de Honorários · Proposta Generator</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. Identificação -->
+  <div class="section">
+    <div class="section-title">1. Identificação · Identification</div>
+    <div class="grid grid-3" style="margin-bottom:14px">
+      <div><label>Referência · Reference</label><input id="ref" placeholder="PH.013.2026.R00" value="PH.013.2026.R00"></div>
+      <div><label>Data · Date</label><input id="data" type="date"></div>
+      <div><label>Validade (dias) · Validity (days)</label><input id="validade" type="number" value="30" min="1"></div>
+    </div>
+  </div>
+
+  <!-- 2. Cliente -->
+  <div class="section">
+    <div class="section-title">2. Cliente · Client</div>
+    <div class="grid grid-2" style="margin-bottom:14px">
+      <div><label>Nome / Empresa · Name / Company</label><input id="cliente-nome" placeholder="Nome do cliente ou empresa"></div>
+      <div><label>NIF</label><input id="cliente-nif" placeholder="PT 000 000 000"></div>
+    </div>
+    <div class="grid grid-2">
+      <div><label>Morada da Obra · Site Address</label><textarea id="cliente-morada" rows="2" placeholder="Rua, n.º, código postal, localidade"></textarea></div>
+      <div><label>Designação do Empreendimento · Project Name</label><textarea id="empreendimento" rows="2" placeholder="Ex: Empreendimento de Agroturismo — Quinta da Sereia"></textarea></div>
+    </div>
+    <div class="grid grid-3" style="margin-top:14px">
+      <div><label>Processo Camarário · Planning Ref.</label><input id="processo" placeholder="Ex: ED / 2025 / 51 — Torres Vedras"></div>
+      <div><label>Tipo de Operação · Operation Type</label><input id="operacao" placeholder="Ex: Licenciamento obras Construção"></div>
+      <div><label>Câmara Municipal · Municipality</label><input id="camara" placeholder="Ex: Torres Vedras"></div>
+    </div>
+  </div>
+
+  <!-- 3. Âmbito -->
+  <div class="section">
+    <div class="section-title">3. Âmbito · Scope</div>
+    <div class="grid grid-3" style="margin-bottom:14px">
+      <div><label>Área bruta total (m²) · Total gross area</label><input id="area" type="number" placeholder="1909" oninput="recalcular()"></div>
+      <div><label>Nº de edifícios · No. of buildings</label><input id="edificios" type="number" placeholder="11" value="1"></div>
+      <div><label>Complexidade · Complexity</label>
+        <select id="complexidade" onchange="recalcular()">
+          <option value="0.70">Simples · Simple (−30%)</option>
+          <option value="0.85">Média · Medium (−15%)</option>
+          <option value="1.00" selected>Elevada · High (base)</option>
+          <option value="1.25">Muito elevada · Very high (+25%)</option>
+        </select>
+      </div>
+    </div>
+    <div><label>Descrição do âmbito · Scope description</label>
+      <textarea id="ambito" rows="3" placeholder="Descreve o empreendimento, tipologias, tipo de intervenção..."></textarea>
+    </div>
+  </div>
+
+  <!-- 4. Especialidades -->
+  <div class="section">
+    <div class="section-title">4. Especialidades e Honorários · Specialities & Fees</div>
+    <table class="esp-table">
+      <thead>
+        <tr>
+          <th style="width:36px"></th>
+          <th>Especialidade · Speciality</th>
+          <th>Valor (€ s/IVA) · Fee (€ ex. VAT)</th>
+          <th>Notas · Notes</th>
+        </tr>
+      </thead>
+      <tbody id="esp-body"></tbody>
+    </table>
+  </div>
+
+  <!-- 5. Totais -->
+  <div class="section">
+    <div class="section-title">5. Resumo de Honorários · Fee Summary</div>
+    <div class="grid grid-2">
+      <div>
+        <div class="grid" style="margin-bottom:14px">
+          <div><label>Desconto comercial (€) · Commercial discount</label><input id="desconto" type="number" value="0" min="0" oninput="recalcular()"></div>
+          <div><label>IVA · VAT (%)</label><input id="iva" type="number" value="23" min="0" max="100" oninput="recalcular()"></div>
+        </div>
+      </div>
+      <div class="totals" id="totals-area">
+        <div class="total-row"><span>Subtotal especialidades</span><span id="t-sub">0,00 €</span></div>
+        <div class="total-row"><span>Desconto · Discount</span><span id="t-desc">0,00 €</span></div>
+        <div class="total-row"><span>Total s/ IVA · Total ex. VAT</span><span id="t-siva">0,00 €</span></div>
+        <div class="total-row"><span>IVA 23% · VAT 23%</span><span id="t-iva">0,00 €</span></div>
+        <div class="total-row main"><span>Total c/ IVA · Total inc. VAT</span><span id="t-civa">0,00 €</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Condições -->
+  <div class="section">
+    <div class="section-title">6. Condições · Terms</div>
+    <div class="grid grid-2">
+      <div><label>Prazo de execução (dias úteis) · Execution period (working days)</label><input id="prazo" type="number" value="120" min="1"></div>
+      <div><label>Prazo pagamento (dias) · Payment deadline (days)</label><input id="prazo-pag" type="number" value="15" min="1"></div>
+    </div>
+    <div style="margin-top:14px"><label>Trabalhos não incluídos · Works not included</label>
+      <textarea id="exclusoes" rows="4">Levantamentos topográficos, cadastrais e geotécnicos.
+Taxas camarárias e das entidades licenciadoras.
+Acompanhamento de obra, fiscalização e telas finais.
+Coordenação de Segurança em Projeto e em Obra (CSP/CSO).
+Certificações finais de instalações.</textarea>
+    </div>
+  </div>
+
+  <!-- 7. Emitente -->
+  <div class="section">
+    <div class="section-title">7. Emitente · Issuer</div>
+    <div class="grid grid-3">
+      <div><label>Nome · Name</label><input id="emit-nome" value="Nuno Basílio"></div>
+      <div><label>Cargo · Title</label><input id="emit-cargo" value="Sócio-gerente · Managing Partner"></div>
+      <div><label>Email</label><input id="emit-email" value="geral@renew.pt"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-secondary" onclick="preview()">Pré-visualizar · Preview</button>
+    <button class="btn-primary" onclick="gerarPDF()">Gerar PDF ↓</button>
+  </div>
+
+</main>
+
+<script>
+const especialidades = [
+  { id:'est-lsf',    pt:'Estabilidade — LSF',                          en:'Structural Engineering — LSF',                valor:0, ativa:false },
+  { id:'est-trad',   pt:'Estabilidade — Tradicional',                   en:'Structural Engineering — Traditional',        valor:0, ativa:false },
+  { id:'contencao',  pt:'Contenção',                                    en:'Retaining Structures',                        valor:0, ativa:false },
+  { id:'agua',       pt:'Redes Prediais — Abastecimento de Água',        en:'Plumbing — Water Supply',                     valor:0, ativa:false },
+  { id:'residuais',  pt:'Redes Prediais — Drenagem Águas Residuais',     en:'Plumbing — Sewage Drainage',                  valor:0, ativa:false },
+  { id:'pluviais',   pt:'Redes Prediais — Drenagem Águas Pluviais',      en:'Plumbing — Storm Water Drainage',             valor:0, ativa:false },
+  { id:'avac',       pt:'AVAC / Ventilação',                             en:'HVAC / Ventilation',                          valor:0, ativa:false },
+  { id:'termico',    pt:'Comportamento Térmico (RECS/REH)',              en:'Thermal Performance (RECS/REH)',               valor:0, ativa:false },
+  { id:'acustica',   pt:'Verificação Requisitos Acústicos',              en:'Acoustic Requirements Assessment',            valor:0, ativa:false },
+  { id:'eletric',    pt:'Eletricidade',                                  en:'Electrical Engineering',                      valor:0, ativa:false },
+  { id:'ited',       pt:'ITED / Telecomunicações',                       en:'ITED / Telecommunications',                   valor:0, ativa:false },
+  { id:'gas',        pt:'Instalação de Gás / Isenção',                   en:'Gas Installation / Exemption',                valor:0, ativa:false },
+  { id:'scie',       pt:'Segurança Contra Incêndio (SCIE)',              en:'Fire Safety (SCIE)',                           valor:0, ativa:false },
+  { id:'mapa',       pt:'Medidas de Autoproteção (MAP)',                 en:'Self-Protection Measures (MAP)',               valor:0, ativa:false },
+  { id:'pss',        pt:'Plano de Segurança e Saúde (PSS)',              en:'Health & Safety Plan (PSS)',                   valor:0, ativa:false },
+  { id:'pgr',        pt:'Plano de Gestão de Resíduos (PGR)',             en:'Waste Management Plan (PGR)',                  valor:0, ativa:false },
+  { id:'fth',        pt:'Ficha Técnica de Habitação',                    en:'Housing Technical Data Sheet',                valor:0, ativa:false },
+  { id:'certif',     pt:'Certificação Energética',                       en:'Energy Certification',                        valor:0, ativa:false },
+  { id:'levant',     pt:'Levantamento Topográfico',                      en:'Topographic Survey',                          valor:0, ativa:false },
+  { id:'coord',      pt:'Coordenação Geral das Especialidades',          en:'General Coordination of Specialities',        valor:0, ativa:false },
+];
+
+function renderEspecialidades() {
+  const tbody = document.getElementById('esp-body');
+  tbody.innerHTML = '';
+  especialidades.forEach((e, i) => {
+    const tr = document.createElement('tr');
+    tr.className = e.ativa ? 'active' : '';
+    tr.innerHTML = `
+      <td><input type="checkbox" ${e.ativa?'checked':''} onchange="toggleEsp(${i}, this.checked)"></td>
+      <td>
+        <div style="font-size:13px;font-weight:${e.ativa?500:400};color:${e.ativa?'#1a1a18':'#999'}">${e.pt}</div>
+        <div style="font-size:11px;color:#aaa">${e.en}</div>
+      </td>
+      <td><input type="number" min="0" step="50" value="${e.valor||''}" placeholder="0" ${!e.ativa?'disabled':''} onchange="setValor(${i}, this.value)" style="opacity:${e.ativa?1:0.4}"></td>
+      <td><input type="text" placeholder="Notas opcionais..." id="nota-${i}" style="font-size:12px;${!e.ativa?'opacity:0.4':''}"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleEsp(i, checked) {
+  especialidades[i].ativa = checked;
+  renderEspecialidades();
+  recalcular();
+}
+
+function setValor(i, v) {
+  especialidades[i].valor = parseFloat(v) || 0;
+  recalcular();
+}
+
+function fmt(v) {
+  return new Intl.NumberFormat('pt-PT', {style:'currency', currency:'EUR', minimumFractionDigits:2}).format(v);
+}
+
+function recalcular() {
+  const subtotal = especialidades.filter(e=>e.ativa).reduce((a,e)=>a+e.valor, 0);
+  const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+  const ivaPct = parseFloat(document.getElementById('iva').value) || 23;
+  const siva = subtotal - desconto;
+  const iva = siva * ivaPct / 100;
+  const civa = siva + iva;
+  document.getElementById('t-sub').textContent = fmt(subtotal);
+  document.getElementById('t-desc').textContent = '− ' + fmt(desconto);
+  document.getElementById('t-siva').textContent = fmt(siva);
+  document.getElementById('t-iva').textContent = fmt(iva);
+  document.getElementById('t-civa').textContent = fmt(civa);
+}
+
+function getData() {
+  const subtotal = especialidades.filter(e=>e.ativa).reduce((a,e)=>a+e.valor, 0);
+  const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+  const ivaPct = parseFloat(document.getElementById('iva').value) || 23;
+  const siva = subtotal - desconto;
+  const iva = siva * ivaPct / 100;
+  const civa = siva + iva;
+  return {
+    ref: document.getElementById('ref').value,
+    data: document.getElementById('data').value,
+    validade: document.getElementById('validade').value,
+    clienteNome: document.getElementById('cliente-nome').value,
+    clienteNif: document.getElementById('cliente-nif').value,
+    clienteMorada: document.getElementById('cliente-morada').value,
+    empreendimento: document.getElementById('empreendimento').value,
+    processo: document.getElementById('processo').value,
+    operacao: document.getElementById('operacao').value,
+    camara: document.getElementById('camara').value,
+    area: document.getElementById('area').value,
+    edificios: document.getElementById('edificios').value,
+    ambito: document.getElementById('ambito').value,
+    prazo: document.getElementById('prazo').value,
+    prazoPag: document.getElementById('prazo-pag').value,
+    exclusoes: document.getElementById('exclusoes').value,
+    emitNome: document.getElementById('emit-nome').value,
+    emitCargo: document.getElementById('emit-cargo').value,
+    emitEmail: document.getElementById('emit-email').value,
+    esps: especialidades.filter(e=>e.ativa).map((e,_,__)=>{
+      const idx = especialidades.indexOf(e);
+      return {...e, nota: document.getElementById('nota-'+idx)?.value||'' };
+    }),
+    subtotal, desconto, ivaPct, siva, iva, civa
+  };
+}
+
+function gerarPDF() {
+  const d = getData();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, ML = 18, MR = 18, CW = W - ML - MR;
+  let y = 0;
+
+  const coral = [232, 89, 60];
+  const dark = [26, 26, 24];
+  const gray = [120, 120, 115];
+  const lightgray = [240, 240, 235];
+  const white = [255, 255, 255];
+
+  function addPage() {
+    doc.addPage();
+    y = 20;
+    // Footer
+    doc.setFontSize(8); doc.setTextColor(...gray);
+    doc.text('renew.pt · Engenharia de Especialidades', ML, 287);
+    doc.text(d.ref, W - MR, 287, {align:'right'});
+    doc.setDrawColor(...lightgray); doc.setLineWidth(0.3);
+    doc.line(ML, 284, W - MR, 284);
+  }
+
+  function checkPage(needed) {
+    if (y + needed > 272) addPage();
+  }
+
+  function sectionTitle(pt, en) {
+    checkPage(14);
+    doc.setFillColor(...coral); doc.rect(ML, y, 2, 8, 'F');
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+    doc.text(pt, ML + 5, y + 5.5);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
+    doc.text('· ' + en, ML + 5 + doc.getTextWidth(pt) + 1, y + 5.5);
+    y += 12;
+  }
+
+  function fieldRow(label, value, label2, value2) {
+    checkPage(10);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
+    doc.text(label, ML, y);
+    doc.setFontSize(9); doc.setTextColor(...dark);
+    doc.text(value || '—', ML, y + 4.5);
+    if (label2) {
+      const x2 = ML + CW/2 + 4;
+      doc.setFontSize(7.5); doc.setTextColor(...gray);
+      doc.text(label2, x2, y);
+      doc.setFontSize(9); doc.setTextColor(...dark);
+      doc.text(value2 || '—', x2, y + 4.5);
+    }
+    y += 11;
+  }
+
+  // ─── CAPA ───
+  doc.setFillColor(...dark); doc.rect(0, 0, W, 60, 'F');
+  doc.setFillColor(...coral); doc.rect(0, 55, W, 4, 'F');
+
+  // Logo text
+  doc.setFont('helvetica','bold'); doc.setTextColor(...white); doc.setFontSize(28);
+  doc.text('RE', ML, 28);
+  doc.text('NEW', ML, 44);
+  doc.setFillColor(...coral); doc.rect(ML, 46, 28, 1.5, 'F');
+
+  // Título proposta
+  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(200, 200, 195);
+  doc.text('PROPOSTA DE HONORÁRIOS · PROPOSAL OF FEES', W - MR, 28, {align:'right'});
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(...white);
+  const empTitle = d.empreendimento || 'Empreendimento';
+  const empLines = doc.splitTextToSize(empTitle.toUpperCase(), CW * 0.55);
+  doc.text(empLines, W - MR, 38, {align:'right'});
+
+  y = 75;
+
+  // ─── IDENTIFICAÇÃO ───
+  sectionTitle('1. Identificação', 'Identification');
+
+  doc.setFillColor(...lightgray); doc.rect(ML, y, CW, 26, 'F');
+  const dataFmt = d.data ? new Date(d.data).toLocaleDateString('pt-PT') : '—';
+  const validFmt = d.data && d.validade ? (() => {
+    const dt = new Date(d.data); dt.setDate(dt.getDate() + parseInt(d.validade));
+    return dt.toLocaleDateString('pt-PT');
+  })() : '—';
+
+  doc.setFontSize(7.5); doc.setTextColor(...gray); doc.setFont('helvetica','normal');
+  doc.text('Referência · Reference', ML+4, y+5);
+  doc.text('Data · Date', ML+50, y+5);
+  doc.text('Validade · Valid until', ML+90, y+5);
+  doc.text('Processo · Planning Ref.', ML+135, y+5);
+  doc.setFontSize(9.5); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text(d.ref || '—', ML+4, y+14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(dataFmt, ML+50, y+14);
+  doc.text(validFmt, ML+90, y+14);
+  doc.text(d.processo || '—', ML+135, y+14);
+  y += 32;
+
+  sectionTitle('2. Cliente', 'Client');
+  fieldRow('Nome / Empresa · Name / Company', d.clienteNome, 'NIF', d.clienteNif);
+  fieldRow('Morada da Obra · Site Address', d.clienteMorada, 'Câmara Municipal · Municipality', d.camara);
+  fieldRow('Designação do Empreendimento · Project Name', d.empreendimento, 'Tipo de Operação · Operation Type', d.operacao);
+
+  // ─── ÂMBITO ───
+  sectionTitle('3. Âmbito dos Trabalhos', 'Scope of Works');
+  if (d.ambito) {
+    checkPage(20);
+    doc.setFontSize(8.5); doc.setTextColor(...dark); doc.setFont('helvetica','normal');
+    const ambitoLines = doc.splitTextToSize(d.ambito, CW);
+    doc.text(ambitoLines, ML, y);
+    y += ambitoLines.length * 4.5 + 6;
+  }
+  fieldRow('Área bruta total · Total gross area', d.area ? d.area + ' m²' : '—', 'Nº edifícios · No. of buildings', d.edificios || '—');
+
+  // ─── ESPECIALIDADES ───
+  checkPage(30);
+  sectionTitle('4. Especialidades Incluídas', 'Specialities Included');
+
+  const espRows = d.esps.map((e, i) => [
+    { content: (i+1).toString(), styles:{halign:'center', textColor:gray, fontSize:8} },
+    { content: e.pt + '\n' + e.en, styles:{fontSize:8.5, textColor:dark} },
+    { content: fmt(e.valor), styles:{halign:'right', fontSize:9, textColor:dark, fontStyle:'bold'} },
+    { content: e.nota || '', styles:{fontSize:7.5, textColor:gray} }
+  ]);
+
+  doc.autoTable({
+    startY: y,
+    head: [[
+      { content: '#', styles:{halign:'center'} },
+      'Especialidade · Speciality',
+      { content: 'Valor s/IVA · Fee ex. VAT', styles:{halign:'right'} },
+      'Notas · Notes'
+    ]],
+    body: espRows,
+    theme: 'striped',
+    headStyles: { fillColor: dark, textColor: white, fontSize: 8, fontStyle:'bold', cellPadding:4 },
+    alternateRowStyles: { fillColor: [248,248,244] },
+    columnStyles: { 0:{cellWidth:10}, 1:{cellWidth:85}, 2:{cellWidth:38}, 3:{cellWidth:CW-133} },
+    margin: { left: ML, right: MR },
+    styles: { font:'helvetica', overflow:'linebreak', cellPadding:3.5 },
+    didDrawPage: () => { y = doc.lastAutoTable.finalY; }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ─── RESUMO FINANCEIRO ───
+  checkPage(60);
+  sectionTitle('5. Resumo de Honorários', 'Fee Summary');
+
+  const finRows = [
+    ['Subtotal especialidades · Specialities subtotal', '', fmt(d.subtotal)],
+    ['Desconto comercial · Commercial discount', '', '− ' + fmt(d.desconto)],
+    ['Total s/ IVA · Total ex. VAT', '', fmt(d.siva)],
+    [`IVA ${d.ivaPct}% · VAT ${d.ivaPct}%`, '', fmt(d.iva)],
+  ];
+
+  doc.autoTable({
+    startY: y,
+    body: finRows,
+    foot: [[
+      { content: 'TOTAL C/ IVA · TOTAL INC. VAT', styles:{fontStyle:'bold', fontSize:10, textColor:white} },
+      '',
+      { content: fmt(d.civa), styles:{fontStyle:'bold', fontSize:10, halign:'right', textColor:white} }
+    ]],
+    theme: 'plain',
+    footStyles: { fillColor: coral, cellPadding: 5 },
+    columnStyles: { 0:{cellWidth:CW-50}, 1:{cellWidth:8}, 2:{cellWidth:42, halign:'right'} },
+    margin: { left: ML, right: MR },
+    styles: { font:'helvetica', fontSize:9, cellPadding:3 },
+    didDrawPage: () => {}
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ─── CONDIÇÕES DE PAGAMENTO ───
+  checkPage(50);
+  sectionTitle('6. Condições de Pagamento', 'Payment Terms');
+
+  doc.autoTable({
+    startY: y,
+    head: [['Tranche', '%', 'Condição · Condition']],
+    body: [
+      ['1.ª · 1st', '40%', `Com a adjudicação formal e emissão de fatura. · Upon formal award and invoice issuance.`],
+      ['2.ª · 2nd', '30%', `Com a entrega dos elementos preliminares para revisão. · Upon delivery of preliminary elements for review.`],
+      ['3.ª · 3rd', '20%', `Com a entrega final para submissão camarária. · Upon final delivery for municipal submission.`],
+      ['4.ª · 4th', '10%', `Com o fecho do processo de submissão. · Upon closure of the submission process.`],
+    ],
+    headStyles: { fillColor: dark, textColor: white, fontSize: 8, fontStyle:'bold', cellPadding:3.5 },
+    theme: 'striped',
+    alternateRowStyles: { fillColor: [248,248,244] },
+    columnStyles: { 0:{cellWidth:18}, 1:{cellWidth:12}, 2:{cellWidth:CW-30} },
+    margin: { left: ML, right: MR },
+    styles: { font:'helvetica', fontSize:8, overflow:'linebreak', cellPadding:3 },
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  checkPage(12);
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text(`Prazo de pagamento: ${d.prazoPag} dias após emissão de fatura, por transferência bancária.`, ML, y);
+  doc.text(`Payment deadline: ${d.prazoPag} days from invoice date, by bank transfer.`, ML, y+4.5);
+  y += 14;
+
+  // ─── PRAZO ───
+  checkPage(20);
+  sectionTitle('7. Prazo de Execução', 'Execution Period');
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(...dark);
+  doc.text(`${d.prazo} dias úteis · ${d.prazo} working days`, ML, y);
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('A contar da adjudicação formal, pagamento da 1.ª tranche e receção de todos os elementos necessários.', ML, y+5);
+  doc.text('From formal award, 1st payment and receipt of all required documents.', ML, y+9.5);
+  y += 18;
+
+  // ─── EXCLUSÕES ───
+  if (d.exclusoes) {
+    checkPage(30);
+    sectionTitle('8. Trabalhos Não Incluídos', 'Works Not Included');
+    const excLines = d.exclusoes.split('\n').filter(l=>l.trim());
+    excLines.forEach(l => {
+      checkPage(8);
+      doc.setFontSize(8.5); doc.setTextColor(...dark); doc.setFont('helvetica','normal');
+      doc.setFillColor(...coral); doc.circle(ML+1.5, y-0.5, 0.8, 'F');
+      doc.text(l.trim(), ML+5, y+0.5);
+      y += 6;
+    });
+    y += 4;
+  }
+
+  // ─── CONDIÇÕES GERAIS ───
+  checkPage(50);
+  sectionTitle('9. Condições Gerais', 'General Terms');
+  const gerais = [
+    ['Validade · Validity', `${d.validade} dias de calendário a partir da data de emissão. · ${d.validade} calendar days from issue date.`],
+    ['Propriedade Intelectual · Intellectual Property', 'Os projetos são propriedade do gabinete até integral liquidação dos honorários. · Projects remain the property of the office until full payment.'],
+    ['Responsabilidade · Liability', 'Projetos subscritos por técnico habilitado inscrito na Ordem dos Engenheiros, com seguro de responsabilidade civil em vigor. · Projects signed by a qualified engineer registered with the Portuguese Engineers Association, with professional liability insurance.'],
+    ['Confidencialidade · Confidentiality', 'Toda a informação trocada é considerada confidencial. · All information exchanged is considered confidential.'],
+    ['Foro · Jurisdiction', 'Comarca de Lisboa Oeste. · Lisbon West Court.'],
+  ];
+  gerais.forEach(([t, v]) => {
+    checkPage(14);
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+    doc.text(t, ML, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(...gray);
+    const vLines = doc.splitTextToSize(v, CW);
+    doc.text(vLines, ML, y+4.5);
+    y += 4.5 + vLines.length*4 + 4;
+  });
+
+  // ─── ASSINATURA ───
+  checkPage(60);
+  sectionTitle('10. Aceitação', 'Acceptance');
+
+  doc.setFillColor(...lightgray); doc.rect(ML, y, CW, 52, 'F');
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Pelo Gabinete · By the Office', ML+4, y+6);
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text(d.emitNome, ML+4, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text(d.emitCargo, ML+4, y+18);
+  doc.text('Data · Date: ' + (d.data ? new Date(d.data).toLocaleDateString('pt-PT') : '___/___/_____'), ML+4, y+24);
+  doc.setDrawColor(...gray); doc.setLineWidth(0.3);
+  doc.line(ML+4, y+40, ML+4+70, y+40);
+  doc.setFontSize(7.5); doc.text('Assinatura · Signature', ML+4, y+44);
+
+  const x2sig = ML + CW/2 + 4;
+  doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Pelo Cliente · By the Client', x2sig, y+6);
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...dark);
+  doc.text(d.clienteNome || '___________________________', x2sig, y+13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...gray);
+  doc.text('Data · Date: ___/___/_____', x2sig, y+24);
+  doc.line(x2sig, y+40, x2sig+70, y+40);
+  doc.setFontSize(7.5); doc.text('Assinatura · Signature', x2sig, y+44);
+
+  doc.setFillColor(...coral); doc.rect(ML, y+48, CW, 1, 'F');
+
+  // ─── FOOTER TODAS AS PÁGINAS ───
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(...gray);
+    doc.text('renew.pt · Engenharia de Especialidades · ' + d.emitEmail, ML, 287);
+    doc.text(`${d.ref}  |  Pág. ${i}/${totalPages}`, W - MR, 287, {align:'right'});
+    doc.setDrawColor(...lightgray); doc.setLineWidth(0.3);
+    doc.line(ML, 284, W - MR, 284);
+  }
+
+  const filename = `${d.ref || 'proposta'}_${(d.clienteNome||'cliente').replace(/\s/g,'_').substring(0,20)}.pdf`;
+  doc.save(filename);
+}
+
+function preview() {
+  alert('Pré-visualização: o PDF será gerado com os dados actuais. Certifica-te de que todos os campos estão preenchidos antes de gerar.');
+}
+
+// Init
+document.getElementById('data').value = new Date().toISOString().split('T')[0];
+renderEspecialidades();
+recalcular();
+</script>
+</body>
+</html>
