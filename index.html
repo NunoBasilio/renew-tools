@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>renew.pt — Ferramentas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--coral:#E8593C;--coral-dark:#C4431F;--dark:#111110;--ink:#1e1e1c;--muted:#888;--border:#e8e8e3;--surface:#f7f7f4;--white:#fff;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+body{font-family:var(--font);background:var(--surface);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--dark);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:baseline;gap:1px}
+.logo-re{font-size:22px;font-weight:700;color:#fff;letter-spacing:-1px}
+.logo-new{font-size:22px;font-weight:700;color:var(--coral);letter-spacing:-1px}
+.logo-dot{width:5px;height:5px;background:var(--coral);border-radius:50%;margin:0 2px 2px}
+.header-sub{font-size:12px;color:#555;font-family:var(--mono)}
+main{flex:1;max-width:900px;margin:0 auto;padding:52px 24px 80px;width:100%}
+.hero{margin-bottom:44px}
+.hero h1{font-size:30px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px}
+.hero h1 span{color:var(--coral)}
+.hero p{font-size:15px;color:var(--muted);max-width:480px;line-height:1.6}
+.section-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:44px}
+.tool-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:26px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:14px;transition:all .2s;position:relative;overflow:hidden}
+.tool-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--coral);transform:scaleX(0);transform-origin:left;transition:transform .2s}
+.tool-card:hover{border-color:#ccc;box-shadow:0 8px 28px rgba(0,0,0,.07);transform:translateY(-2px)}
+.tool-card:hover::before{transform:scaleX(1)}
+.tool-card.new-badge::after{content:'NOVO';position:absolute;top:14px;right:14px;font-size:9px;font-family:var(--mono);background:var(--coral);color:#fff;padding:2px 8px;border-radius:20px;letter-spacing:.5px}
+.tool-icon{width:46px;height:46px;background:#fff8f6;border:1px solid #fdd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.tool-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:20px;background:#fff3f0;color:var(--coral);border:1px solid #fdd;margin-bottom:4px}
+.tool-title{font-size:16px;font-weight:600;margin-bottom:5px;letter-spacing:-.3px}
+.tool-desc{font-size:13px;color:var(--muted);line-height:1.6;flex:1}
+.tool-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border)}
+.tool-features{display:flex;flex-wrap:wrap;gap:5px}
+.feat{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:20px;background:var(--surface);color:#666;border:1px solid var(--border)}
+.tool-arrow{width:30px;height:30px;background:var(--coral);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;transition:transform .2s}
+.tool-card:hover .tool-arrow{transform:translateX(3px)}
+.notion-section{background:#fff;border:1px solid var(--border);border-radius:16px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.notion-left h3{font-size:15px;font-weight:600;margin-bottom:5px}
+.notion-left p{font-size:13px;color:var(--muted);line-height:1.5}
+.notion-links{display:flex;gap:10px;flex-wrap:wrap}
+.notion-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);transition:all .15s;white-space:nowrap}
+.notion-btn:hover{border-color:#999;background:#fff}
+.notion-btn.primary{background:var(--dark);color:#fff;border-color:var(--dark)}
+.notion-btn.primary:hover{background:#333}
+footer{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between}
+footer p{font-size:12px;color:#444;font-family:var(--mono)}
+footer a{color:var(--coral);text-decoration:none}
+@media(max-width:600px){header{padding:0 16px};main{padding:28px 16px};.notion-section{flex-direction:column;align-items:flex-start};footer{padding:16px;flex-direction:column;gap:8px;text-align:center}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="logo-re">RE</span><span class="logo-new">NEW</span><div class="logo-dot"></div></div>
+  <span class="header-sub">ferramentas internas · internal tools</span>
+</header>
+<main>
+  <div class="hero">
+    <h1>Ferramentas <span>renew.pt</span></h1>
+    <p>Hub de ferramentas internas para gestão de projetos, propostas e honorários.</p>
+  </div>
+
+  <div class="section-label">Propostas de honorários</div>
+  <div class="tools-grid">
+    <a href="renew_gerador_v2.html" class="tool-card new-badge">
+      <div><div class="tool-icon">📄</div></div>
+      <div>
+        <div class="tool-tag">v2 · Actualizado</div>
+        <div class="tool-title">Gerador de Propostas</div>
+        <div class="tool-desc">Selecciona especialidades, calcula honorários automaticamente, edita valores e envia ao cliente com um clique.</div>
+      </div>
+      <div class="tool-footer">
+        <div class="tool-features"><span class="feat">Cálculo auto</span><span class="feat">PDF</span><span class="feat">Email</span><span class="feat">Assinatura</span></div>
+        <div class="tool-arrow">→</div>
+      </div>
+    </a>
+    <a href="renew_auto_proposta.html" class="tool-card">
+      <div><div class="tool-icon">🤖</div></div>
+      <div>
+        <div class="tool-tag">IA · AI-powered</div>
+        <div class="tool-title">Auto Proposta</div>
+        <div class="tool-desc">Submete um PDF de projeto e a IA extrai automaticamente os dados e gera uma proposta.</div>
+      </div>
+      <div class="tool-footer">
+        <div class="tool-features"><span class="feat">Leitura PDF</span><span class="feat">IA</span><span class="feat">Bilingue</span></div>
+        <div class="tool-arrow">→</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Portal Notion</div>
+  <div class="notion-section">
+    <div class="notion-left">
+      <h3>Portal de Cliente renew.pt</h3>
+      <p>Gestão de projetos, especialidades, CRM, honorários e área de cliente.</p>
+    </div>
+    <div class="notion-links">
+      <a href="https://www.notion.so/35784ad72c8a8168abf6d7a37c243b71" target="_blank" class="notion-btn primary">Abrir Portal →</a>
+      <a href="https://www.notion.so/3fa92d3296254aa284e838f8ca7c0ab6" target="_blank" class="notion-btn">Propostas & Orçamentos</a>
+      <a href="https://www.notion.so/35784ad72c8a8169a4bee9452a58d48b" target="_blank" class="notion-btn">Área do Cliente</a>
+    </div>
+  </div>
+</main>
+<footer>
+  <p>renew.pt · Engenharia de Especialidades · <a href="mailto:nuno.basilio@renew.pt">nuno.basilio@renew.pt</a></p>
+  <p>© 2026 · <a href="https://github.com/NunoBasilio/renew-tools" target="_blank">github.com/NunoBasilio/renew-tools</a></p>
+</footer>
+</body>
+</html>

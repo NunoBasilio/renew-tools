@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta de Honorários — renew.pt</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--coral:#E8593C;--dark:#111110;--ink:#1e1e1c;--muted:#777770;--border:#e8e8e3;--surface:#f7f7f4;--white:#fff;--green:#2d8c5a}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--surface);color:var(--ink)}
+header{background:var(--dark);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo-re{font-size:20px;font-weight:700;color:#fff;letter-spacing:-1px}
+.logo-new{font-size:20px;font-weight:700;color:var(--coral);letter-spacing:-1px}
+.badge{font-size:11px;color:#555;font-family:monospace}
+.container{max-width:780px;margin:0 auto;padding:36px 20px 60px}
+.hero{margin-bottom:32px}
+.hero h1{font-size:24px;font-weight:600;letter-spacing:-.5px;margin-bottom:6px}
+.hero p{font-size:14px;color:var(--muted)}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.info-item{padding:10px 14px;background:var(--surface);border-radius:8px}
+.info-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.info-value{font-size:13px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+td{padding:9px 10px;border-bottom:1px solid var(--surface)}
+tr:last-child td{border-bottom:none}
+.valor-cell{text-align:right;font-family:monospace;font-weight:500}
+.totals{background:var(--dark);border-radius:10px;padding:18px 20px}
+.t-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#666}
+.t-row.main{font-size:16px;font-weight:700;color:#fff;border-top:1px solid #333;padding-top:10px;margin-top:6px}
+.t-row.main span:last-child{color:var(--coral)}
+.conds{font-size:13px;color:var(--muted);line-height:1.8}
+.conds strong{color:var(--ink)}
+.sig-section{background:var(--white);border:2px solid var(--border);border-radius:14px;padding:28px;margin-top:24px}
+.sig-title{font-size:18px;font-weight:600;margin-bottom:8px}
+.sig-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.field{margin-bottom:16px}
+.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.field input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;transition:border .15s}
+.field input:focus{outline:none;border-color:var(--coral)}
+.accept-box{display:flex;align-items:flex-start;gap:12px;padding:16px;background:var(--surface);border-radius:10px;margin-bottom:20px;cursor:pointer}
+.accept-box input[type=checkbox]{width:18px;height:18px;accent-color:var(--coral);flex-shrink:0;margin-top:2px}
+.accept-text{font-size:13px;color:var(--ink);line-height:1.6}
+.btn-adjudicar{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-adjudicar:hover{background:#216644;transform:translateY(-1px)}
+.btn-adjudicar:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500}
+.status-enviada{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.status-adjudicada{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:14px}
+.error-msg{text-align:center;padding:60px;color:#991b1b}
+.success-msg{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:28px;text-align:center;margin-top:20px}
+.success-msg h3{font-size:18px;color:#166534;margin-bottom:8px}
+.success-msg p{font-size:13px;color:#2d8c5a}
+.already-signed{background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:28px;text-align:center;margin-top:24px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){header{padding:0 16px};.container{padding:20px 12px 60px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div><span class="logo-re">RE</span><span class="logo-new">NEW</span></div>
+  <span class="badge">proposta de honorários</span>
+</header>
+
+<div class="container" id="main">
+  <div class="loading">A carregar proposta...</div>
+</div>
+
+<script>
+// ─── CONFIGURAÇÃO ───
+// IMPORTANTE: substitui este URL pelo URL do teu Apps Script após o deploy
+const API_URL = 'https://script.google.com/macros/s/AKfycbyyi0XxBzH6Er5HbRjivjZtoadGDvlO-vvbNEAXJGqAY4fZLTerBJ47d_9EJbrxw-eR/exec';
+
+function fmt(v) {
+  return new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(v||0);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('pt-PT'); } catch { return d; }
+}
+
+async function carregarProposta() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { mostrarErro('Link inválido — nenhum ID de proposta encontrado.'); return; }
+
+  try {
+    const resp = await fetch(API_URL + '?action=get_proposal&id=' + encodeURIComponent(id));
+    const data = await resp.json();
+    if (data.error) { mostrarErro('Proposta não encontrada: ' + data.error); return; }
+    renderProposta(data);
+  } catch(e) {
+    mostrarErro('Erro ao carregar a proposta: ' + e.message);
+  }
+}
+
+function renderProposta(p) {
+  const esps = p.especialidades || [];
+  const valores = p.valores || {};
+  const adjudicada = p.estado === 'Adjudicado';
+
+  const html = `
+    <div class="hero">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h1>Proposta de Honorários</h1>
+        <span class="status-badge ${adjudicada?'status-adjudicada':'status-enviada'}">
+          ${adjudicada ? '✓ Adjudicada' : '⏳ Aguarda adjudicação'}
+        </span>
+      </div>
+      <p>Referência: <strong>${p.ref||p.id}</strong> · Emitida a ${fmtDate(p.dataEnvio)} · Válida por 30 dias</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">👤 Cliente / Promotor</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Nome</div><div class="info-value">${p.clienteNome||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Empresa</div><div class="info-value">${p.clienteEmpresa||'—'}</div></div>
+          <div class="info-item"><div class="info-label">NIF</div><div class="info-value">${p.clienteNif||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Email</div><div class="info-value">${p.clienteEmail||'—'}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🏗️ Obra</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item" style="grid-column:span 2"><div class="info-label">Designação</div><div class="info-value">${p.designacao||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Localização</div><div class="info-value">${p.localizacao||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Tipo de obra</div><div class="info-value">${p.tipoObra||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Intervenção</div><div class="info-value">${p.tipoIntervencao||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Área bruta</div><div class="info-value">${p.area||'—'} m²</div></div>
+          <div class="info-item"><div class="info-label">Nº edifícios</div><div class="info-value">${p.edificios||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Complexidade</div><div class="info-value">${p.complexidade||'—'}</div></div>
+          ${p.processo ? `<div class="info-item"><div class="info-label">Processo camarário</div><div class="info-value">${p.processo}</div></div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔧 Especialidades incluídas</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th style="padding-left:20px">#</th><th>Especialidade</th><th style="text-align:right;padding-right:20px">Honorário s/ IVA</th></tr></thead>
+          <tbody>
+            ${esps.map((e,i)=>`
+              <tr>
+                <td style="padding-left:20px;color:#aaa;font-size:12px">${i+1}</td>
+                <td>
+                  <div style="font-size:13px;font-weight:500">${e.pt||e}</div>
+                  ${e.en?`<div style="font-size:11px;color:var(--muted)">${e.en}</div>`:''}
+                </td>
+                <td class="valor-cell" style="padding-right:20px">${fmt(e.valor||valores[e.id]||0)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">💶 Resumo financeiro</div>
+      <div class="card-body">
+        <div class="totals">
+          <div class="t-row"><span>Subtotal especialidades</span><span>${fmt(p.subtotal)}</span></div>
+          <div class="t-row"><span>Desconto comercial</span><span>− ${fmt(p.desconto)}</span></div>
+          <div class="t-row"><span>Total s/ IVA</span><span>${fmt(p.totalSIva)}</span></div>
+          <div class="t-row"><span>IVA ${p.ivaPct||23}%</span><span>${fmt(p.iva)}</span></div>
+          <div class="t-row main"><span>Total c/ IVA</span><span>${fmt(p.totalCIva)}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📋 Condições de pagamento e prazo</div>
+      <div class="card-body">
+        <div class="conds">
+          <p style="margin-bottom:12px"><strong>Condições de pagamento:</strong></p>
+          <p>1.ª tranche — <strong>40%</strong> com a adjudicação formal e emissão de fatura</p>
+          <p>2.ª tranche — <strong>30%</strong> com entrega dos elementos preliminares</p>
+          <p>3.ª tranche — <strong>20%</strong> com entrega final para submissão camarária</p>
+          <p>4.ª tranche — <strong>10%</strong> com fecho do processo de submissão</p>
+          <p style="margin-top:12px">Prazo de pagamento de cada fatura: <strong>15 dias</strong> a contar da data de emissão, por transferência bancária.</p>
+          <p style="margin-top:12px"><strong>Validade da proposta:</strong> 30 dias a contar da data de emissão.</p>
+        </div>
+      </div>
+    </div>
+
+    ${adjudicada ? `
+      <div class="already-signed">
+        <div style="font-size:32px;margin-bottom:12px">✅</div>
+        <h3 style="font-size:18px;font-weight:600;color:#166534;margin-bottom:6px">Proposta adjudicada</h3>
+        <p style="font-size:13px;color:#2d8c5a">Esta proposta foi adjudicada por <strong>${p.assinadoPor||'—'}</strong> em ${fmtDate(p.dataAdjudicacao)}.</p>
+      </div>` : `
+      <div class="sig-section" id="sig-section">
+        <div class="sig-title">✍️ Adjudicação da proposta</div>
+        <div class="sig-sub">
+          Para adjudicar esta proposta, confirme os dados abaixo e clique em <strong>"Adjudicar proposta"</strong>.<br>
+          Ao adjudicar, está a aceitar os termos e condições descritos nesta proposta.
+        </div>
+        <div class="field">
+          <label>Nome completo *</label>
+          <input id="sig-nome" placeholder="O seu nome completo" value="${p.clienteNome||''}">
+        </div>
+        <div class="field">
+          <label>Data *</label>
+          <input id="sig-data" type="date" value="${new Date().toISOString().split('T')[0]}">
+        </div>
+        <label class="accept-box">
+          <input type="checkbox" id="sig-check">
+          <span class="accept-text">
+            Declaro que li e aceito os termos desta proposta de honorários, nomeadamente o âmbito dos trabalhos, 
+            os valores apresentados, as condições de pagamento e o prazo de execução.
+          </span>
+        </label>
+        <button class="btn-adjudicar" id="btn-adj" onclick="adjudicar('${p.id||p.ref}')">
+          Adjudicar proposta →
+        </button>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px">
+          Após adjudicação, a renew.pt será notificada automaticamente e entrará em contacto para confirmação formal.
+        </p>
+      </div>`}
+  `;
+
+  document.getElementById('main').innerHTML = html;
+}
+
+async function adjudicar(id) {
+  const nome  = document.getElementById('sig-nome').value.trim();
+  const data  = document.getElementById('sig-data').value;
+  const check = document.getElementById('sig-check').checked;
+
+  if (!nome) { alert('Por favor indica o teu nome completo.'); return; }
+  if (!data) { alert('Por favor indica a data.'); return; }
+  if (!check) { alert('Por favor confirma que leste e aceitas os termos da proposta.'); return; }
+
+  const btn = document.getElementById('btn-adj');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>A processar...';
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'sign_proposal', id, nome, data })
+    });
+    const result = await resp.json();
+    if (result.success) {
+      document.getElementById('sig-section').innerHTML = `
+        <div class="success-msg">
+          <div style="font-size:40px;margin-bottom:12px">🎉</div>
+          <h3>Proposta adjudicada com sucesso!</h3>
+          <p style="margin-top:8px">Obrigado, <strong>${nome}</strong>. A renew.pt foi notificada e entrará em contacto brevemente para confirmação formal e emissão de fatura.</p>
+          <p style="margin-top:8px;font-size:12px;color:#aaa">Data de adjudicação: ${new Date(data).toLocaleDateString('pt-PT')}</p>
+        </div>`;
+    } else {
+      throw new Error(result.error || 'Erro desconhecido');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'Adjudicar proposta →';
+    alert('Erro ao processar a adjudicação: ' + e.message);
+  }
+}
+
+function mostrarErro(msg) {
+  document.getElementById('main').innerHTML = `
+    <div class="error-msg">
+      <div style="font-size:32px;margin-bottom:12px">❌</div>
+      <p style="font-size:14px">${msg}</p>
+      <p style="margin-top:8px;font-size:12px;color:#aaa">Se acredita que isto é um erro, contacte nuno.basilio@renew.pt</p>
+    </div>`;
+}
+
+carregarProposta();
+</script>
+</body>
+</html>
